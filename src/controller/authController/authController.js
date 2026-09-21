@@ -42,7 +42,7 @@ const loginSignupAuth = async (req, res) => {
                         jwt: token
                     })
                 }else{
-                    return res.status(401).json({
+                    return res.status(200).json({
                         status: false,
                         msg: "Invalid user password"
                     })

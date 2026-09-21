@@ -1,8 +1,10 @@
+import dns from "dns";
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import connectDb from "./utils/dbConnection.js";
 import auth from "./routes/authRoutes/auth.js";
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 dotenv.config();
 

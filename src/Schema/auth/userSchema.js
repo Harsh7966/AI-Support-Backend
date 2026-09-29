@@ -3,11 +3,13 @@ import mongoose, { model } from "mongoose";
 const AuthSchema= new mongoose.Schema({
     firstName:{
         type: String,
-        trim: true
+        trim: true,
+        default: null
     },
     lastName:{
         type: String,
-        trim: true
+        trim: true,
+        default: null
     },
     email: {
       type: String,
@@ -24,16 +26,6 @@ const AuthSchema= new mongoose.Schema({
       type: String,
       enum: ["user", "agent", "admin"],
       default: "user",
-    },
-    profileImage: {
-      url: {
-        type: String,
-        default: null,
-      },
-      publicId: {
-        type: String,
-        default: null,
-      },
     },
     phone: {
       type: String,

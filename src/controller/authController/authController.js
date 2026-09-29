@@ -1,5 +1,6 @@
 import User from "../../Schema/auth/userSchema.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 const loginSignupAuth = async (req, res) => {
     try {
@@ -10,8 +11,8 @@ const loginSignupAuth = async (req, res) => {
                 status: false,
                 msg: "Email already exist"
             })
-
-            const register = await User.create({ email, password, role });
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const register = await User.create({ email, password: hashedPassword, role });
             if (register) return res.status(200).json({
                 status: true,
                 msg: "User register successfully"
@@ -19,11 +20,13 @@ const loginSignupAuth = async (req, res) => {
         } else {
             if (email && password) {
                 const isUserExist = await User.findOne({ email });
-                if (!isUserExist) return res.status(404).json({
+                if (!isUserExist) return res.status(200).json({
                     status: false,
                     msg: "User not found"
                 })
-                if (isUserExist.password === password) {
+                // Verify password
+                const isMatch = await bcrypt.compare(password, isUserExist?.password);
+                if (isMatch) {
                     const token = jwt.sign(
                         {
                             userId: isUserExist._id,
@@ -41,7 +44,7 @@ const loginSignupAuth = async (req, res) => {
                         msg: "User login successfully",
                         jwt: token
                     })
-                }else{
+                } else {
                     return res.status(200).json({
                         status: false,
                         msg: "Invalid user password"

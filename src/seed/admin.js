@@ -25,14 +25,14 @@ const seedAdmin = async () => {
         }
 
         // Super admin password
-        // const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+        const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
 
         // Create super admin
         const superAdmin = await User.create({
             firstName: "Admin",
             lastName: "Jii",
             email: process.env.ADMIN_EMAIL,
-            password: process.env.ADMIN_PASSWORD,
+            password: hashedPassword,
             role: "admin",
         });
 

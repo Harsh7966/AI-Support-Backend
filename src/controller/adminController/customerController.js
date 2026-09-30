@@ -2,7 +2,7 @@ import User from "../../Schema/auth/userSchema.js";
 
 const getAllCustomers = async (req, res) => {
     try {
-        const customer = await User.find({ role: "user" , isActive: true }).select("-password");
+        const customer = await User.find({ role: "user", isDeleted: false}).select("-password");
 
         if (customer.length > 0) {
             return res.status(200).json({
@@ -47,7 +47,7 @@ const updateCustomer = async (req, res) => {
     try {
         const { id } = req.params;
         console.log(req.body, id);
-        const { firstName, lastName, email, password, role, phone, isEmailVerified, isActive } = req.body;
+        const { firstName, lastName, email, password, role, phone, isEmailVerified, isActive, isDeleted } = req.body;
         const customer= await User.findById(id);
         if(!customer) return res.status(200).json({status: false, msg: "Customer not found"});
         if(firstName !== undefined) customer.firstName= firstName;
@@ -58,6 +58,10 @@ const updateCustomer = async (req, res) => {
         if(phone !== undefined) customer.phone= phone;
         if(isEmailVerified !== undefined) customer.isEmailVerified= isEmailVerified;
         if(isActive !== undefined) customer.isActive= isActive;
+        if(isDeleted !== undefined){
+            customer.isDeleted= isDeleted;
+            customer.isActive= isActive
+        }
         const updateUser= await User.findByIdAndUpdate(
             id,
             {

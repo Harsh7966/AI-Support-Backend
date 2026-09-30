@@ -45,6 +45,10 @@ const AuthSchema= new mongoose.Schema({
     lastLoginAt: {
       type: Date,
       default: null,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false
     }
 },
 {

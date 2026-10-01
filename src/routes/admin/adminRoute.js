@@ -2,23 +2,30 @@ import express from "express";
 import customerController from "../../controller/adminController/customerController.js";
 import categoryController from "../../controller/adminController/categoryController.js";
 import agentController from "../../controller/adminController/agentController.js";
+import ticketsController from "../../controller/adminController/ticketController.js";
+import { adminAuthMiddleware } from "../../middleware/authMiddleware.js";
 const router= express.Router();
 
 // Customers route
-router.get("/all-customer", customerController.getAllCustomers);
-router.get("/customer-by-id/:id", customerController.getCustomerById);
-router.patch("/update-customer/:id", customerController.updateCustomer);
+router.get("/all-customer", adminAuthMiddleware, customerController.getAllCustomers);
+router.get("/customer-by-id/:id", adminAuthMiddleware, customerController.getCustomerById);
+router.patch("/update-customer/:id", adminAuthMiddleware, customerController.updateCustomer);
 
 // Category route
-router.post("/create-category", categoryController.createCategory);
-router.get("/all-category", categoryController.getAllCategory);
-router.get("/category-details/:id", categoryController.getCategoryDetails);
-router.patch("/update-category/:id", categoryController.updateCategory);
+router.post("/create-category", adminAuthMiddleware, categoryController.createCategory);
+router.get("/all-category", adminAuthMiddleware, categoryController.getAllCategory);
+router.get("/category-details/:id", adminAuthMiddleware, categoryController.getCategoryDetails);
+router.patch("/update-category/:id", adminAuthMiddleware, categoryController.updateCategory);
 
 // Agent route
-router.post("/create-agent", agentController.createAgent);
-router.get("/all-agents", agentController.getAllAgent);
-router.get("/agent-details/:id", agentController.getAgentDetails);
-router.patch("/update-agent/:id", agentController.updateAgent);
+router.post("/create-agent", adminAuthMiddleware, agentController.createAgent);
+router.get("/all-agents", adminAuthMiddleware, agentController.getAllAgent);
+router.get("/agent-details/:id", adminAuthMiddleware, agentController.getAgentDetails);
+router.patch("/update-agent/:id", adminAuthMiddleware, agentController.updateAgent);
+
+// Ticket route
+router.get("/getall-ticket", adminAuthMiddleware, ticketsController.getAllTicket);
+router.get("/ticket-detail/:id", adminAuthMiddleware, ticketsController.getTicketDetails);
+router.patch("/update-ticket/:id", adminAuthMiddleware, ticketsController.updateTicket);
 
 export default router;

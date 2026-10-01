@@ -2,12 +2,6 @@ import mongoose from "mongoose";
 
 const ticketSchema = new mongoose.Schema(
   {
-    ticketNumber: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-
     title: {
       type: String,
       required: true,

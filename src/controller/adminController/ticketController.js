@@ -31,13 +31,14 @@ const getTicketDetails= async(req, res)=>{
 
 const updateTicket= async(req, res)=>{
     try{
-        const {priority, status, assignedAgentId}= req.body;
+        const {priority, status, assignedAgentId, categoryId}= req.body;
         const ticket= await Ticket.findById(req.params.id);
         if(!ticket) return res.status(200).json({status: false, data: ticket, msg: "Ticket not found"});
 
         if(assignedAgentId !== undefined) ticket.assignedAgentId= assignedAgentId;
         if(status !== undefined) ticket.status= status;
         if(priority !== undefined) ticket.priority= priority;
+        if(categoryId !== undefined) ticket.categoryId= categoryId;
         const updateTicket= await Ticket.findByIdAndUpdate(req.params.id,
             {$set: ticket}, {new: true}
         )

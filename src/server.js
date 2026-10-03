@@ -5,7 +5,8 @@ import cors from "cors";
 import connectDb from "./utils/dbConnection.js";
 import auth from "./routes/authRoutes/auth.js";
 import adminRoutes from "./routes/admin/adminRoute.js";
-import userRoutes from "./routes/customers/userRoute.js"
+import userRoutes from "./routes/customers/userRoute.js";
+import agentRoute from "./routes/agent/agentRoute.js";
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 dotenv.config();
@@ -24,6 +25,7 @@ app.use(express.urlencoded({extended: true}));
 app.use("/api/v1", auth);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/user", userRoutes);
+app.use("/api/v1/agent", agentRoute)
 
 const PORT= process.env.PORT;
 connectDb();

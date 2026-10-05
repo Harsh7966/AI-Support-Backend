@@ -2,11 +2,13 @@ import dns from "dns";
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
+import http from "http";
 import connectDb from "./utils/dbConnection.js";
 import auth from "./routes/authRoutes/auth.js";
 import adminRoutes from "./routes/admin/adminRoute.js";
 import userRoutes from "./routes/customers/userRoute.js";
 import agentRoute from "./routes/agent/agentRoute.js";
+import { initSocket } from "./socket.js";
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 dotenv.config();
@@ -29,6 +31,10 @@ app.use("/api/v1/agent", agentRoute)
 
 const PORT= process.env.PORT;
 connectDb();
-app.listen(PORT, ()=>{
+
+// Socket ko raw http server chahiye, isliye app ko http server me lapeta
+const server= http.createServer(app);
+initSocket(server);
+server.listen(PORT, ()=>{
     console.log(`Server run on port ${PORT}`);
 })

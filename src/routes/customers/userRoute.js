@@ -1,6 +1,7 @@
 import express from "express";
 import ticketsController from "../../controller/customerController/ticketsController.js";
 import { customerAuthMiddleware } from "../../middleware/authMiddleware.js";
+import messageController from "../../controller/customerController/messageController.js";
 import categoryController from "../../controller/customerController/categoryController.js";
 
 const router= express.Router();
@@ -11,5 +12,6 @@ router.post("/create-ticket", customerAuthMiddleware, ticketsController.createTi
 router.get("/getall-ticket", customerAuthMiddleware, ticketsController.getAllTicket);
 router.get("/ticket-detail/:id", customerAuthMiddleware, ticketsController.getTicketDetails);
 router.patch("/update-ticket/:id", customerAuthMiddleware, ticketsController.updateTicket);
+router.get("/messages/:ticketId", customerAuthMiddleware, messageController.getMessages);
 
 export default router;

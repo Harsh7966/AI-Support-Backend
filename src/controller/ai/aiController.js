@@ -1,4 +1,5 @@
 import { generateText } from "../../service/llm.service.js";
+import { classifyTicket } from "../../service/classification.service.js";
 
 const chatReply = async (req, res) => {
     try {
@@ -17,6 +18,22 @@ const chatReply = async (req, res) => {
     }
 }
 
+// Stage 4: ticket save kiye bina classification try karne ke liye (sirf admin).
+// Controller ka kaam: request se data nikalo -> service ko do -> response bhejo. Logic yahan nahi.
+const classifyPreview = async (title, description) => {
+    try {
+        if (!title || !description) {
+            return res.status(400).json({ status: false, msg: "title and description are required" });
+        }
+        const result = await classifyTicket(title, description);
+        return ({ status: result.ok, reason: result.reason, attempts: result.attempts, data: result.data });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ status: false, msg: "API service error" });
+    }
+}
+
 export default {
-    chatReply
+    chatReply,
+    classifyPreview
 }

@@ -1,9 +1,20 @@
 import Ticket from "../../Schema/customers/ticketSchema.js";
+import aiController from "../ai/aiController.js";
 
 const createTicket= async(req, res)=>{
     try{
         const {title, description, categoryId, priority}= req.body;
-        const createTicket= await Ticket.create({title, description, customerId: res?.customer?.userId, categoryId, priority});
+        const aiResponse= await aiController.classifyPreview(title, description);
+        const createTicket= await Ticket.create({
+            title, 
+            description, 
+            customerId: res?.customer?.userId, 
+            categoryId, 
+            priority, 
+            aiCategory: aiResponse?.data?.category,
+            aiSummary: aiResponse?.data?.summary,
+            aiPriority: aiResponse?.data?.priority
+        });
         if(createTicket) return res.status(200).json({status: true, data: createTicket , msg: "Ticket created successfully"});
     }catch(err){
         console.log(err);

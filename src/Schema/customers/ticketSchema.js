@@ -43,6 +43,9 @@ const ticketSchema = new mongoose.Schema(
       enum: ["open", "pending", "resolved", "closed", "in-progress"],
       default: "open",
     },
+    aiCategory: { type: String, default: null },
+    aiPriority: { type: String, enum: ["low", "medium", "high", "urgent"], default: null },
+    aiSummary: { type: String, default: null },
   },
   {
     timestamps: true,

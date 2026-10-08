@@ -28,7 +28,7 @@ app.use("/api/v1", auth);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/agent", agentRoute)
-app.use("/api/v1/ai", aiLimiter, aiRoute)
+app.use("/api/v1/ai", aiRoute)
 
 const PORT= process.env.PORT;
 connectDb();

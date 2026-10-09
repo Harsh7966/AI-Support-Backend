@@ -1,5 +1,7 @@
 import { generateText } from "../../service/llm.service.js";
-import { classifyTicket } from "../../service/classification.service.js";
+import { aiGenerateDraft, classifyTicket } from "../../service/classification.service.js";
+import Message from "../../Schema/customers/messageSchema.js";
+import Ticket from "../../Schema/customers/ticketSchema.js";
 
 const chatReply = async (req, res) => {
     try {
@@ -40,12 +42,29 @@ const getTicketSummary = async (req, res) => {
     } catch (err) {
         console.log(err);
         return res.status(500).json({ status: false, msg: "API service error" });
+    }
+}
 
+const generateDraft= async(req, res)=>{
+    try{
+        const id= req.params.id;
+        const getTicketDetails= await Ticket.findById(id);
+        const LastChats= await Message.find({ticketId: id}).select("senderRole message").sort({createdAt: -1}).limit(10);
+        if(LastChats.length === 0) return res.status(200).json({status: false, msg: "No conversation found"});
+        const getSummary= await classifyTicket(getTicketDetails?.title, getTicketDetails?.description, "summary");
+        if(!getSummary.ok) return res.status(200).json({status: false, msg: "No reply for API service for generate summary"});
+        const result= await aiGenerateDraft(getSummary?.data, LastChats);
+        if(result.ok) return res.status(200).json({status: result.ok, attempts: result.attempts, data: result.data});
+        return res.status(400).json({status: result.ok, reason: result.reason, attempts: result.attempts, data: result.data});
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({ status: false, msg: "API service error" });
     }
 }
 
 export default {
     chatReply,
     classifyPreview,
-    getTicketSummary
+    getTicketSummary,
+    generateDraft
 }

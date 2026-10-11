@@ -15,5 +15,5 @@ export const SummaryVerificationSchema= z.object({
 })
 
 export const DraftVerificationSchema= z.object({
-    aiDraft: z.string().min(1).max(200)
+    aiDraft: z.string().min(1).max(400)
 })

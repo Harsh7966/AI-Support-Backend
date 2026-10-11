@@ -49,7 +49,7 @@ const generateDraft= async(req, res)=>{
     try{
         const id= req.params.id;
         const getTicketDetails= await Ticket.findById(id);
-        const LastChats= await Message.find({ticketId: id}).select("senderRole message").sort({createdAt: -1}).limit(10);
+        const LastChats= (await Message.find({ticketId: id}).select("senderRole message").sort({createdAt: -1}).limit(10)).reverse();
         if(LastChats.length === 0) return res.status(200).json({status: false, msg: "No conversation found"});
         const getSummary= await classifyTicket(getTicketDetails?.title, getTicketDetails?.description, "summary");
         if(!getSummary.ok) return res.status(200).json({status: false, msg: "No reply for API service for generate summary"});

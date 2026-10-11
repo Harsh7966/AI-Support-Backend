@@ -235,16 +235,17 @@ export const aiGenerateDraft = async (aiSummary, lastChats) => {
             }
             
             const promptSchema= DraftVerificationSchema.safeParse(parsed);
-            if (!promptSchema) {
+            console.log(promptSchema, "PROMPT schema");
+            if (!promptSchema.success) {
                 console.log(`[AI:classify] attempt ${attempt}: wrong json shape`, check.error.issues[0].message);
                 continue;
             }
             
-            return { ok: true, attempts: attempt, data: parsed };
+            return { ok: true, attempts: attempt, data: promptSchema?.data };
         }
         return { ok: false, reason: "invalid_output", attempts: 2, data: DRAFT_FALLBACK };
     } catch (err) {
-        console.log(err);
-        return res.status(500).json({ status: false, msg: "AI can't generate draft right now." })
+        console.log("[AI:classify] unexpected error:", err.message);
+        return { ok: false, reason: "unexpected_error", attempts: 0, data: DRAFT_FALLBACK };
     }
 }

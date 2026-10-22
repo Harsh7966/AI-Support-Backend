@@ -4,6 +4,7 @@ import Message from "../../Schema/customers/messageSchema.js";
 import Ticket from "../../Schema/customers/ticketSchema.js";
 import { embedTexts } from "../../service/embedding.service.js";
 import { ensureCollection, upsertPoints, searchSimilar, toPointId } from "../../service/vector.service.js";
+import { answerFromTickets } from "../../service/rag.service.js";
 
 const chatReply = async (req, res) => {
     try {
@@ -115,11 +116,28 @@ const similarTickets = async (req, res) => {
     }
 }
 
+// Agent sawaal poochta hai, jawab purane tickets se aata hai (Qdrant + Mongo + LLM).
+// Customer ko abhi nahi diya: sources dusre customers ke tickets hain (privacy). Customer ke liye documents/FAQ chahiye honge.
+const askAssistant = async (req, res) => {
+    try {
+        const question = String(req.body.question || "").trim();
+        if (!question) return res.status(400).json({ status: false, msg: "question is required" });
+        if (question.length > 500) return res.status(400).json({ status: false, msg: "question is too large" });
+
+        const result = await answerFromTickets(question);
+        return res.status(200).json({ status: true, ...result });
+    } catch (err) {
+        console.log("[AI:ask] error:", err.message);
+        return res.status(500).json({ status: false, msg: "API service error" });
+    }
+}
+
 export default {
     chatReply,
     classifyPreview,
     getTicketSummary,
     generateDraft,
     similarTickets,
-    indexTickets
+    indexTickets,
+    askAssistant
 }

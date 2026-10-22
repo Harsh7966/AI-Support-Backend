@@ -1,52 +1,66 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
 import { EMBED_DIM } from "./embedding.service.js";
 
-// Stage 8: Vector DB (Qdrant). Vectors yahan store hote hain aur similarity search yahin hoti hai.
-// MongoDB me tickets/users ka asli record rehta hai, Qdrant me sirf vectors + thodi si metadata (payload).
-const hasPort = !!new URL(process.env.QDRANT_URL).port;
+// ============================================================
+// Stage 8: Vector DB (Qdrant) = vectors save karna + similar vectors dhoondhna.
+// MongoDB me ticket ka asli record rehta hai, Qdrant me sirf vector + thodi info (payload).
+// ============================================================
+
+// STEP 1: Qdrant se connect karo (URL aur key .env se)
+// Cloud URL me port na likha ho to 6333 laga dete hain.
+const urlHasPort = !!new URL(process.env.QDRANT_URL).port;
 const qdrant = new QdrantClient({
     url: process.env.QDRANT_URL,
     apiKey: process.env.QDRANT_API_KEY,
-    ...(hasPort ? {} : { port: 6333 }),
+    ...(urlHasPort ? {} : { port: 6333 }),
     timeout: 30000,
 });
 
+// Collection ka naam (tickets ke vectors yahan rahenge)
 export const TICKETS_COLLECTION = "tickets";
 
-// Qdrant point id sirf UUID ya number ho sakta hai, Mongo ObjectId (24 hex) nahi.
-// ObjectId ko 32 hex tak pad karke UUID bana lete hain. Same ticket = hamesha same id,
-// isliye dobara upsert karne par duplicate nahi banta, purana point update ho jaata hai.
+// STEP 2: Mongo id ko Qdrant id me badlo.
+// Qdrant ko UUID chahiye, Mongo id 24 characters ki hoti hai, isliye 32 tak pad karke UUID jaisa bana dete hain.
+// Same ticket = hamesha same id, to dobara save karne par duplicate nahi banta, update hota hai.
 export const toPointId = (mongoId) => {
     const h = String(mongoId).padEnd(32, "0");
     return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`;
 };
 
-// Collection = vectors ka ek group. Size embedding model ki dimension se match honi chahiye (768).
+// STEP 3: Collection banao (agar pehle se nahi hai).
+// size = vector ki length, distance = doori kaise naapni hai (Cosine)
 export const ensureCollection = async (name = TICKETS_COLLECTION) => {
     const { exists } = await qdrant.collectionExists(name);
     if (exists) return;
-    await qdrant.createCollection(name, { vectors: { size: EMBED_DIM, distance: "Cosine" } });
-    // Filter lagane ke liye us field par index chahiye
+
+    await qdrant.createCollection(name, {
+        vectors: { size: EMBED_DIM, distance: "Cosine" },
+    });
+    // category par filter lagana hai, isliye uska index bhi banao
     await qdrant.createPayloadIndex(name, { field_name: "category", field_schema: "keyword" });
-    console.log(`[VECTOR] collection "${name}" created`);
 };
 
+// STEP 4: Vectors save karo.
 // points = [{ id, vector, payload }]
 export const upsertPoints = async (points, name = TICKETS_COLLECTION) => {
     await qdrant.upsert(name, { wait: true, points });
 };
 
-// Top-K search. scoreThreshold se kam score wale result nahi aate. filter optional (payload par).
+// STEP 5: Sawaal ke vector ke sabse paas wale vectors dhoondo.
+// limit = kitne chahiye, scoreThreshold = isse kam score wale mat do, category = optional filter
 export const searchSimilar = async (vector, { limit = 3, scoreThreshold, category, name = TICKETS_COLLECTION } = {}) => {
-    const start = Date.now();
-    // v1.19 client me search() hata diya gaya, uski jagah query() hai (jawab { points: [...] })
-    const { points: results } = await qdrant.query(name, {
+    const request = {
         query: vector,
         limit,
         score_threshold: scoreThreshold,
         with_payload: true,
-        ...(category ? { filter: { must: [{ key: "category", match: { value: category } }] } } : {}),
-    });
-    console.log("[VECTOR]", { found: results.length, latencyMs: Date.now() - start });
-    return results;
+    };
+
+    // Agar category di hai to sirf usi category me dhoondo
+    if (category) {
+        request.filter = { must: [{ key: "category", match: { value: category } }] };
+    }
+
+    const { points } = await qdrant.query(name, request);
+    return points;
 };

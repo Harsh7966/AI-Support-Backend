@@ -31,18 +31,22 @@ const getTicketDetails= async(req, res)=>{
 
 const updateTicket= async(req, res)=>{
     try{
+        const id= req.params.id;
         const {priority, status, assignedAgentId, categoryId}= req.body;
-        const ticket= await Ticket.findById(req.params.id);
+        const ticket= await Ticket.findById(id);
         if(!ticket) return res.status(200).json({status: false, data: ticket, msg: "Ticket not found"});
 
         if(assignedAgentId !== undefined) ticket.assignedAgentId= assignedAgentId;
         if(status !== undefined) ticket.status= status;
         if(priority !== undefined) ticket.priority= priority;
         if(categoryId !== undefined) ticket.categoryId= categoryId;
-        const updateTicket= await Ticket.findByIdAndUpdate(req.params.id,
+        const updateTicket= await Ticket.findByIdAndUpdate(id,
             {$set: ticket}, {new: true}
         )
-        if(updateTicket) return res.status(200).json({status: true, data: updateTicket, msg: "Ticket updated successfully"});
+        if(updateTicket){
+            if(categoryId !== undefined) await aiController.indexOneTicket(id);
+            return res.status(200).json({status: true, data: updateTicket, msg: "Ticket updated successfully"});
+        }
     }catch(err){
         console.log(err);
     }

@@ -5,6 +5,7 @@ import Ticket from "../../Schema/customers/ticketSchema.js";
 import { embedTexts } from "../../service/embedding.service.js";
 import { ensureCollection, upsertPoints, searchSimilar, toPointId } from "../../service/vector.service.js";
 import { answerFromTickets } from "../../service/rag.service.js";
+import { isWorthIndexing } from "../../utils/helper.js";
 
 const chatReply = async (req, res) => {
     try {
@@ -29,7 +30,7 @@ const classifyPreview = async (title, description) => {
             return res.status(400).json({ status: false, msg: "title and description are required" });
         }
         const result = await classifyTicket(title, description, "classify");
-        if(result) return ({ status: result.ok, reason: result.reason, attempts: result.attempts, data: result.data });
+        if (result) return ({ status: result.ok, reason: result.reason, attempts: result.attempts, data: result.data });
     } catch (err) {
         console.log(err);
         return res.status(500).json({ status: false, msg: "API service error" });
@@ -38,30 +39,50 @@ const classifyPreview = async (title, description) => {
 
 const getTicketSummary = async (req, res) => {
     try {
-        const {title, description}= req.body;
-        if(!title || !description) return res.status(400).json({status: false, msg: "title, description and category is required"});
-        const result= await classifyTicket(title, description, "summary");
-        if(result) return res.status(200).json({status: result.ok, reason: result.reason, attempts: result.attempts, data: result.data });
+        const { title, description } = req.body;
+        if (!title || !description) return res.status(400).json({ status: false, msg: "title, description and category is required" });
+        const result = await classifyTicket(title, description, "summary");
+        if (result) return res.status(200).json({ status: result.ok, reason: result.reason, attempts: result.attempts, data: result.data });
     } catch (err) {
         console.log(err);
         return res.status(500).json({ status: false, msg: "API service error" });
     }
 }
 
-const generateDraft= async(req, res)=>{
-    try{
-        const id= req.params.id;
-        const getTicketDetails= await Ticket.findById(id);
-        const LastChats= (await Message.find({ticketId: id}).select("senderRole message").sort({createdAt: -1}).limit(10)).reverse();
+const generateDraft = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const getTicketDetails = await Ticket.findById(id);
+        const LastChats = (await Message.find({ ticketId: id }).select("senderRole message").sort({ createdAt: -1 }).limit(10)).reverse();
         // if(LastChats.length === 0) return res.status(200).json({status: false, msg: "No conversation found"});
-        const getSummary= await classifyTicket(getTicketDetails?.title, getTicketDetails?.description, "summary");
-        if(!getSummary.ok) return res.status(200).json({status: false, msg: "No reply for API service for generate summary"});
-        const result= await aiGenerateDraft(getSummary?.data, LastChats);
-        if(result.ok) return res.status(200).json({status: result.ok, attempts: result.attempts, data: result.data});
-        return res.status(400).json({status: result.ok, reason: result.reason, attempts: result.attempts, data: result.data});
-    }catch(err){
+        const getSummary = await classifyTicket(getTicketDetails?.title, getTicketDetails?.description, "summary");
+        if (!getSummary.ok) return res.status(200).json({ status: false, msg: "No reply for API service for generate summary" });
+        const result = await aiGenerateDraft(getSummary?.data, LastChats);
+        if (result.ok) return res.status(200).json({ status: result.ok, attempts: result.attempts, data: result.data });
+        return res.status(400).json({ status: result.ok, reason: result.reason, attempts: result.attempts, data: result.data });
+    } catch (err) {
         console.log(err);
         return res.status(500).json({ status: false, msg: "API service error" });
+    }
+}
+
+const indexOneTicket = async (id) => {
+    try {
+        await ensureCollection();
+        const ticket = await Ticket.findById(id).populate("categoryId", "name").select("title description categoryId");
+        const check= isWorthIndexing(ticket);
+        if(!check) return;
+        const [vector] = await embedTexts([`${ticket?.title}. ${ticket?.description}`.slice(0, 1000)], "RETRIEVAL_DOCUMENT");
+        const points = {
+            id: toPointId(ticket._id),
+            vector,
+            payload: { ticketId: String(ticket?._id), title: ticket?.title, category: ticket?.categoryId?.name || "unknown" }
+        }
+        console.log("Single ticket vector:", JSON.stringify(points.vector)); 
+        await upsertPoints([points]);
+        return;
+    } catch (err) {
+        console.log(err);
     }
 }
 
@@ -70,20 +91,27 @@ const generateDraft= async(req, res)=>{
 const indexTickets = async (req, res) => {
     try {
         await ensureCollection();
-        const tickets = await Ticket.find({}).populate("categoryId", "name").select("title description categoryId");
-        if (tickets.length === 0) return res.status(200).json({ status: true, indexed: 0 });
+        const allTickets = await Ticket.find({}).populate("categoryId", "name").select("title description categoryId");
+        const tickets = allTickets.filter(isWorthIndexing);
+        if (tickets.length === 0) return res.status(200).json({ status: true, indexed: 0, skipped: allTickets.length });
 
         const BATCH = 50; // ek call me bahut saare texts nahi bhejte
         for (let i = 0; i < tickets.length; i += BATCH) {
             const batch = tickets.slice(i, i + BATCH);
             const vectors = await embedTexts(batch.map((t) => `${t.title}. ${t.description}`.slice(0, 1000)), "RETRIEVAL_DOCUMENT");
-            await upsertPoints(batch.map((t, idx) => ({
+            const points = batch.map((t, idx) => ({
                 id: toPointId(t._id),
                 vector: vectors[idx],
                 payload: { ticketId: String(t._id), title: t.title, category: t.categoryId?.name || "unknown" },
-            })));
+            }));
+            // DEBUG (dekhne ke baad hata dena): is batch ke SAB tickets ke poore vectors (768 numbers)
+            // points.forEach((pt, n) => {
+            //     console.log(`[DEBUG:index] #${n + 1} ${pt.payload.title} | ${pt.payload.category} | vectorLength: ${pt.vector.length}`);
+            //     console.log(JSON.stringify(pt.vector));
+            // });
+            await upsertPoints(points);
         }
-        return res.status(200).json({ status: true, indexed: tickets.length });
+        return res.status(200).json({ status: true, indexed: tickets.length, skipped: allTickets.length - tickets.length });
     } catch (err) {
         console.log("[AI:index] error:", err.message);
         return res.status(500).json({ status: false, msg: "API service error" });
@@ -102,6 +130,9 @@ const similarTickets = async (req, res) => {
 
         const [queryVector] = await embedTexts([query], "RETRIEVAL_QUERY");
         const hits = await searchSimilar(queryVector, { limit: 3, scoreThreshold: MIN_SCORE, category });
+        // DEBUG (dekhne ke baad hata dena): sawaal ka vector aur Qdrant ne kya diya
+        // console.log("[DEBUG:search] query:", query, "| vectorLength:", queryVector.length, "| vectorFirst8:", queryVector.slice(0, 8));
+        // console.log("[DEBUG:search] hits:", hits.map((h) => ({ title: h.payload.title, score: Number(h.score.toFixed(3)) })));
 
         const data = hits.map((h) => ({
             ticketId: h.payload.ticketId,
@@ -111,7 +142,7 @@ const similarTickets = async (req, res) => {
         }));
         return res.status(200).json({ status: true, data });
     } catch (err) {
-        console.log("[AI:embed] error:", err.message);
+        console.log("[AI:embed] error:", err);
         return res.status(500).json({ status: false, msg: "API service error" });
     }
 }
@@ -139,5 +170,6 @@ export default {
     generateDraft,
     similarTickets,
     indexTickets,
-    askAssistant
+    askAssistant,
+    indexOneTicket
 }

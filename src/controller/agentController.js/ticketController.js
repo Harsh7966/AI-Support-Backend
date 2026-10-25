@@ -45,8 +45,30 @@ const updateTicket= async(req, res)=>{
     }
 }
 
+const agentDashboardInfo= async(req, res)=>{
+    try{
+        const {userId}= res.agent;
+        let open=0,pending=0,resolved=0;
+        const allTickets= await Ticket.find({assignedAgentId: userId})
+        .populate("assignedAgentId", "firstName lastName")
+        .populate("categoryId", "name")
+        .populate("customerId", "firstName lastName")
+        .sort({createdAt: -1});
+        if(allTickets.length === 0) return res.status(200).json({status: true, message: "No ticket assign"});
+        allTickets.filter((t)=>{
+            if(t.status === "open") open++;
+            else if(t.status === "pending") pending++;
+            else if(t.status === "resolved") resolved++;
+        })
+        return res.status(200).json({status: true, tickets: allTickets.slice(0,5), open, pending, resolved, total: allTickets.length});
+    }catch(err){
+        console.log(err);
+    }
+}
+
 export default{
     getAllTicket,
     getTicketDetails,
-    updateTicket
+    updateTicket,
+    agentDashboardInfo
 }

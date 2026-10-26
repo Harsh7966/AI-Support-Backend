@@ -57,6 +57,18 @@ const loginSignupAuth = async (req, res) => {
     }
 }
 
+const userProfile= async(req, res)=>{
+    try{
+        const user= res.admin || res.customer || res.agent;
+        const getUserProfile= await User.findById(user?.userId).select("-password");
+        if(!getUserProfile) return res.status(400).json({status: false, data: getUserProfile , msg: "Profile detail not found"});
+        return res.status(200).json({status: true, data: getUserProfile, msg: "Profile details found"});
+    }catch(err){
+        console.log(err);
+    }
+}
+
 export default {
-    loginSignupAuth
+    loginSignupAuth,
+    userProfile
 }

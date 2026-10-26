@@ -3,8 +3,11 @@ import customerController from "../../controller/adminController/customerControl
 import categoryController from "../../controller/adminController/categoryController.js";
 import agentController from "../../controller/adminController/agentController.js";
 import ticketsController from "../../controller/adminController/ticketController.js";
+import authController from "../../controller/authController/authController.js";
 import { adminAuthMiddleware } from "../../middleware/authMiddleware.js";
 const router= express.Router();
+
+router.get("/profile", adminAuthMiddleware, authController.userProfile);
 
 // Customers route
 router.get("/all-customer", adminAuthMiddleware, customerController.getAllCustomers);

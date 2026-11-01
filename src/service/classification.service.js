@@ -1,7 +1,7 @@
 import Category from "../Schema/admin/categorySchema.js";
+import { isFeatureEnabled } from "./aiSettings.service.js";
 import { generateJson } from "./llm.service.js";
 import { classificationSchema, DraftVerificationSchema, SummaryVerificationSchema } from "../validator/ai/classificationSchema.js";
-import { json } from "zod";
 
 // AI fail ho jaye to ye default milega. Ticket phir bhi ban sakta hai (category null = agent khud dekhega).
 const FALLBACK = { categoryId: null, category: null, priority: null, summary: null };
@@ -136,6 +136,11 @@ Rules:
 
 export const classifyTicket = async (title, description, usecase, askModel = generateJson) => {
     try {
+        // 0. Admin ne AI band kiya hai? To seedha fallback. Ticket phir bhi ban jayega (graceful failure).
+        if (!(await isFeatureEnabled("classification"))) {
+            return { ok: false, reason: "ai_disabled", attempts: 0, data: FALLBACK };
+        }
+
         // 1. DB se ASLI categories lo (jo admin ne banayi hain)
         const categories = await Category.find({ isActive: true, isDeleted: false });
         if (categories.length === 0) {
@@ -235,9 +240,8 @@ export const aiGenerateDraft = async (aiSummary, lastChats) => {
             }
             
             const promptSchema= DraftVerificationSchema.safeParse(parsed);
-            console.log(promptSchema, "PROMPT schema");
             if (!promptSchema.success) {
-                console.log(`[AI:classify] attempt ${attempt}: wrong json shape`, check.error.issues[0].message);
+                console.log(`[AI:draft] attempt ${attempt}: wrong json shape`, promptSchema.error.issues[0].message);
                 continue;
             }
             

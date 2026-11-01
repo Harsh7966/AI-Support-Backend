@@ -1,0 +1,122 @@
+[
+  {
+    "q": "How do I reset my password?",
+    "expectDoc": "reset your password"
+  },
+  {
+    "q": "I forgot my password",
+    "expectDoc": "reset your password"
+  },
+  {
+    "q": "mera password bhool gaya hai kya karu",
+    "expectDoc": "reset your password"
+  },
+  {
+    "q": "reset link email nahi aa raha",
+    "expectDoc": "reset your password"
+  },
+  {
+    "q": "I cannot log in to my account",
+    "expectDoc": "Cannot log in"
+  },
+  {
+    "q": "login nahi ho raha",
+    "expectDoc": "Cannot log in"
+  },
+  {
+    "q": "my account got locked after wrong attempts",
+    "expectDoc": "Cannot log in"
+  },
+  {
+    "q": "How can I get a refund?",
+    "expectDoc": "Refund policy"
+  },
+  {
+    "q": "paisa wapas kaise milega",
+    "expectDoc": "Refund policy"
+  },
+  {
+    "q": "Is refund guaranteed?",
+    "expectDoc": "Refund policy"
+  },
+  {
+    "q": "Payment failed but money was deducted from my bank",
+    "expectDoc": "Payment failed"
+  },
+  {
+    "q": "payment cut gaya par order nahi hua",
+    "expectDoc": "Payment failed"
+  },
+  {
+    "q": "How do I cancel my plan?",
+    "expectDoc": "cancel your subscription"
+  },
+  {
+    "q": "subscription band karni hai",
+    "expectDoc": "cancel your subscription"
+  },
+  {
+    "q": "How can I change my email id?",
+    "expectDoc": "Change your email"
+  },
+  {
+    "q": "Export button is not working on reports page",
+    "expectDoc": "Export button"
+  },
+  {
+    "q": "report download nahi ho rahi",
+    "expectDoc": "Export button"
+  },
+  {
+    "q": "How to turn on 2FA?",
+    "expectDoc": "two-factor"
+  },
+  {
+    "q": "Where can I download my invoice?",
+    "expectDoc": "Download invoices"
+  },
+  {
+    "q": "invoice me company name galat hai",
+    "expectDoc": "Download invoices"
+  },
+  {
+    "q": "What are your support timings?",
+    "expectDoc": "Support hours"
+  },
+  {
+    "q": "Someone else logged into my account",
+    "expectDoc": "Someone else is using"
+  },
+  {
+    "q": "mere account ko kisi aur ne hack kar liya",
+    "expectDoc": "Someone else is using"
+  },
+  {
+    "q": "Cricket score",
+    "expectDoc": null
+  },
+  {
+    "q": "What is the capital of France?",
+    "expectDoc": null
+  },
+  {
+    "q": "Write a poem about the moon",
+    "expectDoc": null
+  },
+  {
+    "q": "What is the weather today?",
+    "expectDoc": null
+  },
+  {
+    "q": "Do you offer a student discount?",
+    "expectDoc": null
+  },
+  {
+    "q": "Can I get a free trial for 6 months?",
+    "expectDoc": null
+  },
+  {
+    "q": "How do I integrate your API with Salesforce?",
+    "expectDoc": null
+  }
+]

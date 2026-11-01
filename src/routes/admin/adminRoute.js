@@ -4,6 +4,7 @@ import categoryController from "../../controller/adminController/categoryControl
 import agentController from "../../controller/adminController/agentController.js";
 import ticketsController from "../../controller/adminController/ticketController.js";
 import authController from "../../controller/authController/authController.js";
+import aiAdminController from "../../controller/adminController/aiAdminController.js";
 import { adminAuthMiddleware } from "../../middleware/authMiddleware.js";
 const router= express.Router();
 
@@ -30,5 +31,10 @@ router.patch("/update-agent/:id", adminAuthMiddleware, agentController.updateAge
 router.get("/getall-ticket", adminAuthMiddleware, ticketsController.getAllTicket);
 router.get("/ticket-detail/:id", adminAuthMiddleware, ticketsController.getTicketDetails);
 router.patch("/update-ticket/:id", adminAuthMiddleware, ticketsController.updateTicket);
+
+// AI monitoring + settings (Stage 12)
+router.get("/ai-stats", adminAuthMiddleware, aiAdminController.getStats);
+router.get("/ai-settings", adminAuthMiddleware, aiAdminController.getSettings);
+router.patch("/ai-settings", adminAuthMiddleware, aiAdminController.patchSettings);
 
 export default router;

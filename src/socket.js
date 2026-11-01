@@ -26,7 +26,7 @@ const canAccessTicket = async (ticketId, userId) => {
 
 export const initSocket = (httpServer) => {
     const io = new Server(httpServer, {
-        cors: { origin: "http://localhost:3000", credentials: true },
+        cors: { origin: process.env.FRONTEND_URL || "http://localhost:3000", credentials: true },
     });
 
     // ---------- C: CONNECT (gate) ----------

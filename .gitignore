@@ -20,3 +20,5 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+# AI evaluation results
+eval-results/

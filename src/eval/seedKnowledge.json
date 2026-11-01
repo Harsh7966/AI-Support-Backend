@@ -1,0 +1,57 @@
+[
+  {
+    "title": "How to reset your password",
+    "category": "Account",
+    "content": "Go to the login page and click 'Forgot password'. Enter your registered email and we will send a reset link. Open the link within the time shown in the email and choose a new password. If the email does not arrive, check your spam folder and make sure you used the same email as your account."
+  },
+  {
+    "title": "Cannot log in to your account",
+    "category": "Account",
+    "content": "If you cannot log in, first check that the email and password are correct and Caps Lock is off. Try the 'Forgot password' option to reset your password. If your account is locked after many wrong attempts, wait some time and try again, or create a ticket so our team can check your account."
+  },
+  {
+    "title": "Refund policy",
+    "category": "Billing",
+    "content": "Refund requests are reviewed by our billing team. To ask for a refund, create a ticket in the Billing category with your order or payment details and the reason. The billing team checks each request and replies on the ticket. Refunds are not guaranteed and are decided case by case."
+  },
+  {
+    "title": "Payment failed but money was deducted",
+    "category": "Billing",
+    "content": "Sometimes the amount is deducted but the payment shows as failed. In most cases the bank returns the money automatically after a few working days. If it is not returned, create a ticket in the Billing category with the payment date, amount and a screenshot or transaction reference so we can check it."
+  },
+  {
+    "title": "How to cancel your subscription",
+    "category": "Subscription",
+    "content": "You can cancel your subscription from your account settings under Subscription. Your plan stays active until the end of the current billing period and will not renew after that. If you do not see the cancel option, create a ticket in the Subscription category and our team will help."
+  },
+  {
+    "title": "Change your email address",
+    "category": "Account",
+    "content": "To change the email on your account, open your Profile page and update the email field, then confirm using the verification mail. If you no longer have access to the old email, create a ticket in the Account category and we will verify your identity before changing it."
+  },
+  {
+    "title": "Export button or report download not working",
+    "category": "Technical",
+    "content": "If the Export button on the reports page shows an error or nothing downloads, refresh the page and try again, and make sure pop-ups or downloads are not blocked in your browser. If the problem continues, create a ticket in the Technical category with a screenshot of the error and the report you were exporting."
+  },
+  {
+    "title": "Enable two-factor authentication",
+    "category": "Security",
+    "content": "You can add extra security from Profile > Security > Two-factor authentication. Scan the QR code with an authenticator app and enter the 6 digit code to finish. Keep your backup codes safe, because they are needed if you lose your phone."
+  },
+  {
+    "title": "Download invoices",
+    "category": "Billing",
+    "content": "Invoices are available in your account under Billing > Invoices. Choose the month and click Download to get a PDF copy. If an invoice is missing or has wrong details such as company name or tax number, create a ticket in the Billing category."
+  },
+  {
+    "title": "Support hours and contact",
+    "category": "General",
+    "content": "Our support team replies to tickets Monday to Saturday, 10 AM to 7 PM. Tickets created outside these hours are answered on the next working day. For fastest help, create a ticket with clear details and screenshots instead of sending multiple short messages."
+  },
+  {
+    "title": "Someone else is using my account",
+    "category": "Security",
+    "content": "If you think someone else is using your account, change your password immediately and enable two-factor authentication. Then create a ticket in the Security category with details such as when you noticed it, so our team can review recent activity on your account."
+  }
+]

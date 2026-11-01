@@ -2,6 +2,7 @@ import "dotenv/config";
 import dns from "dns";
 import express from "express";
 import cors from "cors";
+import mongoose from "mongoose";
 import http from "http";
 import connectDb from "./utils/dbConnection.js";
 import auth from "./routes/authRoutes/auth.js";
@@ -17,11 +18,17 @@ const app= express();
 
 //Middleware
 app.use(cors({
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
+
+//Health check: app aur MongoDB zinda hain ya nahi
+app.get("/health", (req, res) => {
+    const dbUp = mongoose.connection.readyState === 1;
+    return res.status(dbUp ? 200 : 503).json({ status: dbUp, uptimeSec: Math.round(process.uptime()), db: dbUp ? "connected" : "disconnected" });
+});
 
 //Routes
 app.use("/api/v1", auth);

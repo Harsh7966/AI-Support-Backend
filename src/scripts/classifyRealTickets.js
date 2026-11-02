@@ -48,7 +48,7 @@ const main = async () => {
     let okCount = 0;
     for (const t of tickets) {
         // fake undefined ho to classifyTicket apna asli generateJson use karega
-        const result = await classifyTicket(t.title, t.description, fake ? fakeModels[fake] : undefined);
+        const result = await classifyTicket(t.title, t.description, "classify", fake ? fakeModels[fake] : undefined);
         if (result.ok) okCount++;
 
         console.log("Ticket   :", t.title);

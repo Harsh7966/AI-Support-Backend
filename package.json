@@ -9,7 +9,9 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "adminseed": "node src/seed/admin.js",
-    "ai:classify": "node src/scripts/classifyRealTickets.js"
+    "ai:classify": "node src/scripts/classifyRealTickets.js",
+    "ai:seed-kb": "node src/scripts/seedKnowledge.js",
+    "ai:eval": "node src/scripts/evalAssistant.js"
   },
   "keywords": [],
   "author": "",

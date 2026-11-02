@@ -18,6 +18,8 @@ const qdrant = new QdrantClient({
 
 // Collection ka naam (tickets ke vectors yahan rahenge)
 export const TICKETS_COLLECTION = "tickets";
+// Knowledge base (admin ke FAQ/policy entries) ke vectors yahan rahenge
+export const KNOWLEDGE_COLLECTION = "knowledge";
 
 // STEP 2: Mongo id ko Qdrant id me badlo.
 // Qdrant ko UUID chahiye, Mongo id 24 characters ki hoti hai, isliye 32 tak pad karke UUID jaisa bana dete hain.
@@ -63,4 +65,19 @@ export const searchSimilar = async (vector, { limit = 3, scoreThreshold, categor
 
     const { points } = await qdrant.query(name, request);
     return points;
+};
+
+// STEP 6: Points delete karo (jaise knowledge entry delete hui to uska vector bhi hatao).
+export const deletePoints = async (ids, name = TICKETS_COLLECTION) => {
+    await qdrant.delete(name, { wait: true, points: ids });
+};
+
+// STEP 7: Collection me kitne vectors hain (admin AI settings page par dikhane ke liye). Error par null.
+export const countPoints = async (name = TICKETS_COLLECTION) => {
+    try {
+        const info = await qdrant.getCollection(name);
+        return info.points_count ?? 0;
+    } catch (err) {
+        return null;
+    }
 };

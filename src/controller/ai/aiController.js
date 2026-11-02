@@ -5,13 +5,14 @@ import Ticket from "../../Schema/customers/ticketSchema.js";
 import { embedTexts } from "../../service/embedding.service.js";
 import { ensureCollection, upsertPoints, searchSimilar, toPointId } from "../../service/vector.service.js";
 import { answerFromTickets } from "../../service/rag.service.js";
-import { isWorthIndexing, isWorthSummaryIndexing } from "../../utils/helper.js";
+import { isWorthIndexing } from "../../utils/helper.js";
+import { isFeatureEnabled } from "../../service/aiSettings.service.js";
 
 const chatReply = async (req, res) => {
     try {
         const { message } = req.body;
         if (!message) return res.status(400).json({ status: false, msg: "Message is required" });
-        if (message.length > Number(process.env.MAX_MESSAGE_LENGTH)) return res.status(400).json({ status: false, msg: "Message is too large" });
+        if (message.length > (Number(process.env.MAX_MESSAGE_LENGTH) || 1000)) return res.status(400).json({ status: false, msg: "Message is too large" });
 
         const response = await generateText(message);
         if (response) {
@@ -26,14 +27,14 @@ const chatReply = async (req, res) => {
 
 const classifyPreview = async (title, description) => {
     try {
-        if (!title || !description) {
-            return res.status(400).json({ status: false, msg: "title and description are required" });
-        }
+        // Ye function route nahi hai (ticket create ke andar se bulaya jata hai), isliye res nahi hota. Object return karte hain.
+        if (!title || !description) return { status: false, reason: "invalid_input", attempts: 0, data: null };
         const result = await classifyTicket(title, description, "classify");
         if (result) return ({ status: result.ok, reason: result.reason, attempts: result.attempts, data: result.data });
+        return { status: false, reason: "no_result", attempts: 0, data: null };
     } catch (err) {
         console.log(err);
-        return res.status(500).json({ status: false, msg: "API service error" });
+        return { status: false, reason: "unexpected_error", attempts: 0, data: null };
     }
 }
 
@@ -53,10 +54,18 @@ const generateDraft = async (req, res) => {
     try {
         const id = req.params.id;
         const getTicketDetails = await Ticket.findById(id);
+        if (!getTicketDetails) return res.status(200).json({ status: false, msg: "Ticket not found" });
+        // Agent sirf apne assigned ticket ka draft bana sakta hai (admin sab ka)
+        if (res.agent && String(getTicketDetails.assignedAgentId) !== String(res.agent.userId)) {
+            return res.status(200).json({ status: false, msg: "Unauthorized" });
+        }
         const LastChats = (await Message.find({ ticketId: id }).select("senderRole message").sort({ createdAt: -1 }).limit(10)).reverse();
         // if(LastChats.length === 0) return res.status(200).json({status: false, msg: "No conversation found"});
         const getSummary = await classifyTicket(getTicketDetails?.title, getTicketDetails?.description, "summary");
-        if (!getSummary.ok) return res.status(200).json({ status: false, msg: "No reply for API service for generate summary" });
+        if (!getSummary.ok) {
+            const msg = getSummary.reason === "ai_disabled" ? "AI is currently turned off by admin" : "No reply for API service for generate summary";
+            return res.status(200).json({ status: false, msg });
+        }
         const result = await aiGenerateDraft(getSummary?.data, LastChats);
         if (result.ok) return res.status(200).json({ status: result.ok, attempts: result.attempts, data: result.data });
         return res.status(400).json({ status: result.ok, reason: result.reason, attempts: result.attempts, data: result.data });
@@ -179,6 +188,7 @@ const askAssistant = async (req, res) => {
         const question = String(req.body.question || "").trim();
         if (!question) return res.status(400).json({ status: false, msg: "question is required" });
         if (question.length > 500) return res.status(400).json({ status: false, msg: "question is too large" });
+        if (!(await isFeatureEnabled("assistant"))) return res.status(200).json({ status: false, msg: "AI assistant is currently turned off by admin" });
 
         const result = await answerFromTickets(question);
         return res.status(200).json({ status: true, ...result });

@@ -5,7 +5,7 @@ import Ticket from "../../Schema/customers/ticketSchema.js";
 import { embedTexts } from "../../service/embedding.service.js";
 import { ensureCollection, upsertPoints, searchSimilar, toPointId } from "../../service/vector.service.js";
 import { answerFromTickets } from "../../service/rag.service.js";
-import { isWorthIndexing } from "../../utils/helper.js";
+import { isWorthIndexing, isWorthSummaryIndexing } from "../../utils/helper.js";
 
 const chatReply = async (req, res) => {
     try {
@@ -77,6 +77,31 @@ const indexOneTicket = async (id) => {
             id: toPointId(ticket._id),
             vector,
             payload: { ticketId: String(ticket?._id), title: ticket?.title, category: ticket?.categoryId?.name || "unknown" }
+        }
+        console.log("Single ticket vector:", JSON.stringify(points.vector)); 
+        await upsertPoints([points]);
+        return;
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+const indexTicketSummary = async (ticket, problem) => {
+    try {
+        await ensureCollection();
+        const check= isWorthSummaryIndexing(problem);
+        if(!check) return;
+        const [vector] = await embedTexts([problem], "RETRIEVAL_DOCUMENT");
+        const points = {
+            id: toPointId(ticket._id),
+            vector,
+            payload: {
+                ticketId: String(ticket._id),
+                category: ticket.categoryId?.name || "unknown",
+                problem: summary.problem,
+                solution: summary.solution,
+                steps: summary.steps,
+            }
         }
         console.log("Single ticket vector:", JSON.stringify(points.vector)); 
         await upsertPoints([points]);
@@ -171,5 +196,6 @@ export default {
     similarTickets,
     indexTickets,
     askAssistant,
-    indexOneTicket
+    indexOneTicket,
+    indexTicketSummary
 }

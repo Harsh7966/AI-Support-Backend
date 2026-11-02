@@ -1,5 +1,6 @@
 import Ticket from "../../Schema/customers/ticketSchema.js";
 import aiController from "../ai/aiController.js";
+import AiLog from "../../Schema/ai/aiLogSchema.js";
 
 const createTicket = async (req, res) => {
     try {
@@ -75,9 +76,42 @@ const updateTicket = async (req, res) => {
     }
 }
 
+const customerDashboardInfo = async (req, res) => {
+    try {
+        const { userId } = res.customer;
+        const allTickets = await Ticket.find({ customerId: userId })
+            .populate("categoryId", "name")
+            .sort({ createdAt: -1 });
+
+        const open = allTickets.filter((t) => ["open", "pending", "in-progress"].includes(t.status)).length;
+        const resolved = allTickets.filter((t) => ["resolved", "closed"].includes(t.status)).length;
+
+        // AI assistant ke LLM calls ka count (har call ka log aiLog me hota hai)
+        let aiConversations = 0;
+        try {
+            aiConversations = await AiLog.countDocuments({ userId, feature: "customer_assistant", kind: "llm" });
+        } catch (err) {
+            console.log(err);
+        }
+
+        return res.status(200).json({
+            status: true,
+            tickets: allTickets.slice(0, 4),
+            total: allTickets.length,
+            open,
+            resolved,
+            aiConversations,
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ status: false, msg: "Failed to load dashboard" });
+    }
+}
+
 export default {
     createTicket,
     getAllTicket,
     getTicketDetails,
-    updateTicket
+    updateTicket,
+    customerDashboardInfo
 }

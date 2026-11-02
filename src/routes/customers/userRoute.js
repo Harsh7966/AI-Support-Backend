@@ -15,6 +15,7 @@ router.post("/create-ticket", customerAuthMiddleware, aiLimiter, aiContext("tick
 router.get("/getall-ticket", customerAuthMiddleware, ticketsController.getAllTicket);
 router.get("/ticket-detail/:id", customerAuthMiddleware, ticketsController.getTicketDetails);
 router.patch("/update-ticket/:id", customerAuthMiddleware, ticketsController.updateTicket);
+router.get("/user-dashboard", customerAuthMiddleware, ticketsController.customerDashboardInfo);
 router.get("/messages/:ticketId", customerAuthMiddleware, messageController.getMessages);
 
 export default router;
